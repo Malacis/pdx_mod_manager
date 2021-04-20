@@ -59,9 +59,9 @@ impl Interface {
                 0 => self.add_mod().await,
                 1 => self.delete_mods().await,
                 2 => self.update_all_game_mods().await,
+                3 => self.change_game_path().await,
                 4 => self.change_game_name().await,
-                5 => self.change_game_path().await,
-                6 => {
+                5 => {
                     self.selection = None;
                     self.show_games().await
                 }

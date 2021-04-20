@@ -46,7 +46,7 @@ impl Interface {
             .interact()?;
 
         if !proceed {
-            return self.show_game_options().await
+            return self.show_game_options().await;
         }
 
         let file = self.remote.download_item(item_id).await?;
@@ -80,17 +80,14 @@ impl Interface {
         if let Some(item) = game.mods.get_mut(&item_id.to_string()) {
             item.time_updated = item_time_updated;
         } else {
-            let _old = game
-                .mods
-                .insert(
-                    item_id.to_string(),
-                    Mod {
-                        id: item_id,
-                        title: item_title,
-                        time_updated: item_time_updated,
-                    },
-                )
-                .expect("failed to insert mod");
+            let _old = game.mods.insert(
+                item_id.to_string(),
+                Mod {
+                    id: item_id,
+                    title: item_title,
+                    time_updated: item_time_updated,
+                },
+            );
         }
 
         println!("Mod installed!.");
@@ -118,7 +115,7 @@ impl Interface {
 
         if items.is_empty() {
             println!("You have no mods installed for that game!");
-            return self.show_game_options().await
+            return self.show_game_options().await;
         }
 
         let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -127,7 +124,7 @@ impl Interface {
             .interact()?;
 
         if chosen.is_empty() {
-            return self.show_game_options().await
+            return self.show_game_options().await;
         }
 
         for index in chosen {
@@ -161,7 +158,10 @@ impl Interface {
             .get_mut(game_selection)
             .expect("get game failed");
 
-        let modif = game.mods.get_mut(&item_id.to_string()).expect("get mod failed");
+        let modif = game
+            .mods
+            .get_mut(&item_id.to_string())
+            .expect("get mod failed");
 
         let (_, item_time_updated) = self.remote.get_item_info(item_id).await?;
 
