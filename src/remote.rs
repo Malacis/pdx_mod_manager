@@ -161,7 +161,12 @@ impl Remote {
                 .await?;
 
             if status_response
-                .get(status_request_body.uuids.get(0).expect("no uuid in response"))
+                .get(
+                    status_request_body
+                        .uuids
+                        .get(0)
+                        .expect("no uuid in response"),
+                )
                 .expect("Uuid incorrect")
                 .status
                 == "prepared"

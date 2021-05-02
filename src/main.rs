@@ -10,6 +10,7 @@
 //! - add progress bars for operations
 //! - improve interface
 
+mod filesystem;
 mod interface;
 mod remote;
 
@@ -19,7 +20,7 @@ use anyhow::Result;
 use interface::Interface;
 use serde::{Deserialize, Serialize};
 
-/// This struct saves the configuration for this program and is used for toml deserialization and serilization.
+/// This struct saves the configuration for this program and is used for toml deserialization and serialization.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     /// All configured `Game`s.
@@ -28,7 +29,7 @@ pub struct Config {
 
 /// Configured games.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-struct Game {
+pub struct Game {
     /// Name of the game.
     title: String,
     /// Path where mods are installed for this game.

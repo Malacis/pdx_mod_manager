@@ -1,4 +1,4 @@
-//! Interface and filesystem functionality.
+//! Interface functionality.
 
 mod games;
 mod mods;
@@ -6,7 +6,7 @@ mod mods;
 use anyhow::Result;
 use async_recursion::async_recursion;
 use std::{
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io::Write,
 };
 
@@ -76,19 +76,6 @@ impl Interface {
             println!("User did not select anything");
             Ok(())
         }
-    }
-
-    /// Updates the config file.
-    pub fn update_config_file(&self) -> Result<()> {
-        let mut config_file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open("config.toml")?;
-
-        config_file.write_all(toml::to_string(&self.config)?.as_bytes())?;
-        Ok(())
     }
 
     /// updates all mods.

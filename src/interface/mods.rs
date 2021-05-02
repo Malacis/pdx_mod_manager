@@ -3,13 +3,9 @@
 use anyhow::Result;
 use async_recursion::async_recursion;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect};
-use std::{
-    fs::{self, OpenOptions},
-    io::{Cursor, Write},
-    path::Path,
-};
+use std::{fs, io::Cursor};
 
-use crate::Mod;
+use crate::{filesystem::write_mod, Mod};
 
 use super::Interface;
 
@@ -52,29 +48,8 @@ impl Interface {
         let file = self.remote.download_item(item_id).await?;
         println!("Download finished!");
         println!("### Installing ###");
-        let mut zip = zip::ZipArchive::new(Cursor::new(file))?;
-        let install_path = format!("{}/{}", game.path_mods.trim(), item_id);
-        let mod_file_path = format!("{}/{}.mod", game.path_mods.trim(), item_id);
-        if Path::new(&install_path).exists() {
-            fs::remove_dir_all(install_path.clone())?;
-        }
-        if Path::new(&mod_file_path).exists() {
-            fs::remove_file(mod_file_path.clone())?;
-        }
-
-        zip.extract(install_path.clone())?;
-
-        println!("Writing .mod file.");
-        let mut mod_file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(mod_file_path)?;
-
-        mod_file.write_all(
-            format!("name=\"{}\"\npath=\"{}\"", item_title.trim(), install_path,).as_bytes(),
-        )?;
+        let zip = zip::ZipArchive::new(Cursor::new(file))?;
+        write_mod(item_id, item_title.clone(), zip, &game.path_mods)?;
 
         println!("Updating config file.");
         if let Some(item) = game.mods.get_mut(&item_id.to_string()) {
@@ -90,9 +65,9 @@ impl Interface {
             );
         }
 
+        self.config.update_config_file()?;
         println!("Mod installed!.");
 
-        self.update_config_file()?;
         self.show_game_options().await
     }
 
@@ -144,7 +119,7 @@ impl Interface {
                 .expect("could not remove mod from config");
         }
 
-        self.update_config_file()?;
+        self.config.update_config_file()?;
 
         println!("Mods removed!");
         self.show_game_options().await
@@ -163,7 +138,7 @@ impl Interface {
             .get_mut(&item_id.to_string())
             .expect("get mod failed");
 
-        let (_, item_time_updated) = self.remote.get_item_info(item_id).await?;
+        let (item_title, item_time_updated) = self.remote.get_item_info(item_id).await?;
 
         if modif.time_updated >= item_time_updated {
             println!(
@@ -177,36 +152,16 @@ impl Interface {
 
         let file = self.remote.download_item(item_id).await?;
 
-        println!("Deleting old files.");
+        let zip = zip::ZipArchive::new(Cursor::new(file))?;
 
-        let install_path = format!("{}/{}", game.path_mods, modif.id);
-        let mod_file_path = format!("{}/{}{}", game.path_mods, modif.id, ".mod");
-
-        fs::remove_dir_all(&install_path)?;
-        fs::remove_file(&mod_file_path)?;
-
-        println!("Extracting and copying new files.");
-        let mut zip = zip::ZipArchive::new(Cursor::new(file))?;
-        zip.extract(&install_path)?;
-
-        println!("Writing .mod file.");
-        let mut mod_file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(mod_file_path)?;
-
-        mod_file.write_all(
-            format!("name=\"{}\"\npath=\"{}\"", modif.title.trim(), install_path,).as_bytes(),
-        )?;
+        write_mod(item_id, item_title.clone(), zip, &game.path_mods)?;
 
         println!("Updating config file.");
         modif.time_updated = item_time_updated;
 
         println!("Mod updated!.");
 
-        self.update_config_file()?;
+        self.config.update_config_file()?;
         Ok(())
     }
 }

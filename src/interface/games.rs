@@ -104,7 +104,7 @@ impl Interface {
             mods: HashMap::new(),
         });
 
-        self.update_config_file()?;
+        self.config.update_config_file()?;
         println!("Game added successfully!");
         self.show_main_menu().await
     }
@@ -151,7 +151,7 @@ impl Interface {
             let _old = games.remove(index);
         }
 
-        self.update_config_file()?;
+        self.config.update_config_file()?;
 
         println!("Games removed!");
         self.show_main_menu().await
